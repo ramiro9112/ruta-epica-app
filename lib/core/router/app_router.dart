@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,11 +23,31 @@ import '../../presentation/screens/bookings/booking_confirmation_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+class _AuthChangeNotifier extends ChangeNotifier {
+  late final StreamSubscription<AuthState> _sub;
+
+  _AuthChangeNotifier() {
+    _sub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authNotifier = _AuthChangeNotifier();
+  ref.onDispose(authNotifier.dispose);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     debugLogDiagnostics: false,
+    refreshListenable: authNotifier,
     redirect: (context, state) async {
       final isOnSplash = state.matchedLocation == '/splash';
       if (isOnSplash) return null;

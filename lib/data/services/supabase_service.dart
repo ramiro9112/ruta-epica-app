@@ -37,6 +37,7 @@ class SupabaseService {
     final response = await client.auth.signUp(
       email: email.trim().toLowerCase(),
       password: password,
+      emailRedirectTo: 'rutaepica://login-callback/',
       data: {
         if (fullName != null) 'full_name': fullName,
         if (phone != null) 'phone': phone,
