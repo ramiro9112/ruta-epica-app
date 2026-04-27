@@ -69,32 +69,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           child: Column(
             children: [
               const Spacer(flex: 2),
-              // Logo container
+              // Logo oficial Ruta Épica
               Container(
-                width: 120,
-                height: 120,
+                width: 160,
+                height: 160,
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.gold, width: 2.5),
                   borderRadius: BorderRadius.circular(24),
-                  color: AppColors.deepBlue,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.gold.withValues(alpha: 0.25),
-                      blurRadius: 20,
-                      spreadRadius: 2,
+                      color: AppColors.gold.withValues(alpha: 0.2),
+                      blurRadius: 30,
+                      spreadRadius: 4,
                     ),
                   ],
                 ),
-                child: const Center(
-                  child: Text(
-                    'RE',
-                    style: TextStyle(
-                      color: AppColors.gold,
-                      fontSize: 42,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2,
-                    ),
-                  ),
+                child: Image.asset(
+                  'assets/images/logo.webp',
+                  fit: BoxFit.contain,
                 ),
               )
                   .animate()

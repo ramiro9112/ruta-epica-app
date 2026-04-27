@@ -70,32 +70,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Hero(
                         tag: 'app_logo',
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AppColors.deepBlue,
-                            borderRadius: BorderRadius.circular(18),
-                            border:
-                                Border.all(color: AppColors.gold, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.deepBlue.withValues(alpha: 0.3),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'RE',
-                              style: TextStyle(
-                                color: AppColors.gold,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 2,
-                              ),
-                            ),
+                        child: SizedBox(
+                          width: 100,
+                          height: 100,
+                          child: Image.asset(
+                            'assets/images/logo.webp',
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ),
