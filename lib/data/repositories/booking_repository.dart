@@ -13,7 +13,7 @@ class BookingRepository {
         .insert(booking.toInsertJson())
         .select()
         .single();
-    return BookingModel.fromJson(response as Map<String, dynamic>);
+    return BookingModel.fromJson(response);
   }
 
   Future<List<BookingModel>> getUserBookings(String userId) async {
@@ -22,8 +22,8 @@ class BookingRepository {
         .select()
         .eq('user_id', userId)
         .order('created_at', ascending: false);
-    return (response as List)
-        .map((json) => BookingModel.fromJson(json as Map<String, dynamic>))
+    return response
+        .map((json) => BookingModel.fromJson(json))
         .toList();
   }
 
@@ -33,7 +33,7 @@ class BookingRepository {
         .select()
         .eq('id', id)
         .single();
-    return BookingModel.fromJson(response as Map<String, dynamic>);
+    return BookingModel.fromJson(response);
   }
 
   Future<void> cancel(String id) async {

@@ -57,7 +57,7 @@ class DestinationRepository {
         .select()
         .eq('id', id)
         .single();
-    return DestinationModel.fromJson(response as Map<String, dynamic>);
+    return DestinationModel.fromJson(response);
   }
 
   Future<List<DestinationModel>> search(String query) async {

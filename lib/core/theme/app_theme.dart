@@ -142,8 +142,8 @@ class AppTheme {
     );
   }
 
-  static CardTheme _buildCardTheme() {
-    return CardTheme(
+  static CardThemeData _buildCardTheme() {
+    return CardThemeData(
       color: AppColors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -288,8 +288,8 @@ class AppTheme {
     );
   }
 
-  static TabBarTheme _buildTabBarTheme() {
-    return TabBarTheme(
+  static TabBarThemeData _buildTabBarTheme() {
+    return TabBarThemeData(
       labelColor: AppColors.deepBlue,
       unselectedLabelColor: AppColors.darkGray,
       indicatorColor: AppColors.deepBlue,
