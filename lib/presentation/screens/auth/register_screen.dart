@@ -52,7 +52,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           fullName: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
         );
-    if (success && mounted) {
+    if (!success || !mounted) return;
+
+    final authState = ref.read(authNotifierProvider);
+    if (authState.pendingEmailConfirmation) {
+      // Email confirmation required — show dialog then go to login
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.mark_email_read_rounded, color: Color(0xFF00BFA5), size: 28),
+              SizedBox(width: 10),
+              Text('¡Cuenta creada!'),
+            ],
+          ),
+          content: Text(
+            'Te enviamos un correo de confirmación a\n${_emailController.text.trim()}\n\nRevisa tu bandeja y haz clic en el enlace para activar tu cuenta.',
+            style: const TextStyle(height: 1.5),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      if (mounted) context.go('/login');
+    } else {
       context.go('/home/explore');
     }
   }

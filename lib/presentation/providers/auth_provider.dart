@@ -26,17 +26,20 @@ class AppAuthState {
   final bool isLoading;
   final String? errorMessage;
   final UserProfileModel? user;
+  final bool pendingEmailConfirmation;
 
   const AppAuthState({
     this.isLoading = false,
     this.errorMessage,
     this.user,
+    this.pendingEmailConfirmation = false,
   });
 
   AppAuthState copyWith({
     bool? isLoading,
     String? errorMessage,
     UserProfileModel? user,
+    bool? pendingEmailConfirmation,
     bool clearError = false,
     bool clearUser = false,
   }) {
@@ -44,6 +47,8 @@ class AppAuthState {
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       user: clearUser ? null : (user ?? this.user),
+      pendingEmailConfirmation:
+          pendingEmailConfirmation ?? this.pendingEmailConfirmation,
     );
   }
 }
@@ -86,7 +91,14 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
         fullName: fullName,
         phone: phone,
       );
-      state = state.copyWith(isLoading: false, user: user);
+      // If user created but no active session → email confirmation pending
+      final needsConfirmation =
+          Supabase.instance.client.auth.currentSession == null;
+      state = state.copyWith(
+        isLoading: false,
+        user: user,
+        pendingEmailConfirmation: needsConfirmation,
+      );
       return true;
     } catch (e) {
       state = state.copyWith(

@@ -42,13 +42,20 @@ class SupabaseService {
         if (phone != null) 'phone': phone,
       },
     );
-    if (response.user != null) {
-      await _upsertProfile(
-        userId: response.user!.id,
-        email: email.trim().toLowerCase(),
-        fullName: fullName,
-        phone: phone,
-      );
+    // Only upsert profile when there is an active session.
+    // When email confirmation is required, session is null — the DB trigger
+    // creates the profile automatically upon confirmation.
+    if (response.user != null && response.session != null) {
+      try {
+        await _upsertProfile(
+          userId: response.user!.id,
+          email: email.trim().toLowerCase(),
+          fullName: fullName,
+          phone: phone,
+        );
+      } catch (_) {
+        // Profile creation via trigger will handle it on first sign-in.
+      }
     }
     return response;
   }
