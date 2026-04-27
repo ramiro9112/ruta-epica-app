@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -87,3 +89,10 @@ jobs:
             build/app/outputs/flutter-apk/ruta-epica-arm32-debug.apk
           draft: false
           prerelease: false
+
+      - name: Deploy confirmation page to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          force_orphan: true

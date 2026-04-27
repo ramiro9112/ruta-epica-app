@@ -140,17 +140,48 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
 
   String _parseError(Object e) {
     final message = e.toString();
-    if (message.contains('Invalid login credentials') ||
-        message.contains('invalid_credentials')) {
-      return 'Correo o contraseña incorrectos.';
-    } else if (message.contains('Email not confirmed')) {
-      return 'Por favor confirma tu correo electrónico.';
-    } else if (message.contains('User already registered')) {
-      return 'Este correo ya está registrado. Inicia sesión.';
-    } else if (message.contains('network') || message.contains('connection')) {
-      return 'Error de conexión. Verifica tu internet.';
+    // Rate limiting
+    if (message.contains('over_email_send_rate_limit') ||
+        message.contains('rate limit') ||
+        message.contains('429')) {
+      return 'Demasiados intentos. Espera unos minutos e intenta de nuevo.';
     }
-    return 'Algo salió mal. Intenta de nuevo.';
+    // Credentials
+    if (message.contains('Invalid login credentials') ||
+        message.contains('invalid_credentials') ||
+        message.contains('Invalid email') ||
+        message.contains('Invalid password')) {
+      return 'Correo o contraseña incorrectos.';
+    }
+    // Email confirmation
+    if (message.contains('Email not confirmed') ||
+        message.contains('email_not_confirmed')) {
+      return 'Revisa tu correo y confirma tu cuenta antes de ingresar.';
+    }
+    // Duplicate account
+    if (message.contains('User already registered') ||
+        message.contains('already_registered') ||
+        message.contains('email_exists')) {
+      return 'Este correo ya está registrado. Inicia sesión.';
+    }
+    // Redirect URL not allowed (misconfigured dashboard)
+    if (message.contains('Redirect URL not allowed') ||
+        message.contains('redirect')) {
+      return 'Error de configuración. Contacta al soporte.';
+    }
+    // Network
+    if (message.contains('network') ||
+        message.contains('connection') ||
+        message.contains('SocketException') ||
+        message.contains('TimeoutException')) {
+      return 'Sin conexión. Verifica tu internet e intenta de nuevo.';
+    }
+    // Weak password
+    if (message.contains('Password should be') ||
+        message.contains('weak_password')) {
+      return 'La contraseña es muy débil. Usa al menos 6 caracteres.';
+    }
+    return 'Error: $message';
   }
 }
 

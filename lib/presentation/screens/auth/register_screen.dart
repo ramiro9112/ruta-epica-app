@@ -34,6 +34,58 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  Future<void> _showConfirmationDialog(String email) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.mark_email_read_rounded, color: Color(0xFF00BFA5), size: 28),
+            SizedBox(width: 10),
+            Expanded(child: Text('¡Cuenta creada!')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Te enviamos un correo de confirmación a:',
+              style: const TextStyle(height: 1.5),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              email,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Revisa tu bandeja de entrada (y spam) y toca el enlace para activar tu cuenta.',
+              style: TextStyle(height: 1.5),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Nota: el enlace abre una página web para confirmar. Después de confirmar, vuelve a la app e inicia sesión.',
+              style: TextStyle(height: 1.5, fontSize: 12, color: Color(0xFF666666)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _onRegister() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_acceptTerms) {
@@ -56,31 +108,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final authState = ref.read(authNotifierProvider);
     if (authState.pendingEmailConfirmation) {
-      // Email confirmation required — show dialog then go to login
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.mark_email_read_rounded, color: Color(0xFF00BFA5), size: 28),
-              SizedBox(width: 10),
-              Text('¡Cuenta creada!'),
-            ],
-          ),
-          content: Text(
-            'Te enviamos un correo de confirmación a\n${_emailController.text.trim()}\n\nRevisa tu bandeja y haz clic en el enlace para activar tu cuenta.',
-            style: const TextStyle(height: 1.5),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Entendido'),
-            ),
-          ],
-        ),
-      );
+      await _showConfirmationDialog(_emailController.text.trim());
       if (mounted) context.go('/login');
     } else {
       context.go('/home/explore');

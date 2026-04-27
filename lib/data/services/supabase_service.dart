@@ -37,7 +37,8 @@ class SupabaseService {
     final response = await client.auth.signUp(
       email: email.trim().toLowerCase(),
       password: password,
-      emailRedirectTo: 'rutaepica://login-callback/',
+      // GitHub Pages confirmation page — redirects browser to app deep link
+      emailRedirectTo: 'https://ramiro9112.github.io/ruta-epica-app/',
       data: {
         if (fullName != null) 'full_name': fullName,
         if (phone != null) 'phone': phone,
