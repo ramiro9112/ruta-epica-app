@@ -22,25 +22,25 @@ final userProfileProvider = FutureProvider<UserProfileModel?>((ref) async {
 });
 
 // Auth notifier state
-class AuthState2 {
+class AppAuthState {
   final bool isLoading;
   final String? errorMessage;
   final UserProfileModel? user;
 
-  const AuthState2({
+  const AppAuthState({
     this.isLoading = false,
     this.errorMessage,
     this.user,
   });
 
-  AuthState2 copyWith({
+  AppAuthState copyWith({
     bool? isLoading,
     String? errorMessage,
     UserProfileModel? user,
     bool clearError = false,
     bool clearUser = false,
   }) {
-    return AuthState2(
+    return AppAuthState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       user: clearUser ? null : (user ?? this.user),
@@ -49,10 +49,10 @@ class AuthState2 {
 }
 
 // Auth notifier
-class AuthNotifier extends StateNotifier<AuthState2> {
+class AuthNotifier extends StateNotifier<AppAuthState> {
   final AuthRepository _repository;
 
-  AuthNotifier(this._repository) : super(const AuthState2());
+  AuthNotifier(this._repository) : super(const AppAuthState());
 
   Future<bool> signIn({
     required String email,
@@ -101,7 +101,7 @@ class AuthNotifier extends StateNotifier<AuthState2> {
     state = state.copyWith(isLoading: true);
     try {
       await _repository.signOut();
-      state = const AuthState2();
+      state = const AppAuthState();
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: _parseError(e));
     }
@@ -143,6 +143,6 @@ class AuthNotifier extends StateNotifier<AuthState2> {
 }
 
 final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AuthState2>((ref) {
+    StateNotifierProvider<AuthNotifier, AppAuthState>((ref) {
   return AuthNotifier(ref.watch(authRepositoryProvider));
 });

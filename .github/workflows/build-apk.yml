@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Debug APK
+    name: Build Split APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -33,32 +33,57 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build debug APK
-        run: flutter build apk --debug
+      - name: Build split APKs (per ABI)
+        run: flutter build apk --debug --split-per-abi
 
-      - name: Upload APK artifact
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk
+          mv app-armeabi-v7a-debug.apk ruta-epica-arm32-debug.apk   || true
+          mv app-arm64-v8a-debug.apk   ruta-epica-arm64-debug.apk   || true
+          mv app-x86_64-debug.apk      ruta-epica-x86_64-debug.apk  || true
+          ls -lh *.apk
+
+      - name: Upload arm64 APK (Android 2017+ — recomendado)
         uses: actions/upload-artifact@v4
         with:
-          name: ruta-epica-debug-${{ github.run_number }}
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: ruta-epica-arm64-build${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/ruta-epica-arm64-debug.apk
           retention-days: 30
 
-      - name: Create Release with APK
-        if: github.ref == 'refs/heads/master'
+      - name: Upload arm32 APK (Android antiguo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruta-epica-arm32-build${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/ruta-epica-arm32-debug.apk
+          retention-days: 30
+
+      - name: Create GitHub Release with all APKs
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: "Ruta Épica v1.0 - Build ${{ github.run_number }}"
+          name: "Ruta Épica — Build ${{ github.run_number }}"
           body: |
-            ## APK Debug — Ruta Épica
+            ## APKs disponibles
 
-            Descarga el APK e instálalo en tu Android:
-            1. Descarga `app-debug.apk`
-            2. En Android: Ajustes → Seguridad → Instalar apps desconocidas ✓
-            3. Instala el APK
+            | APK | Dispositivo | Tamaño |
+            |-----|-------------|--------|
+            | `ruta-epica-arm64-debug.apk` | Android moderno (2017+, 64-bit) | ~20MB |
+            | `ruta-epica-arm32-debug.apk` | Android antiguo (32-bit) | ~15MB |
 
-            **Build:** ${{ github.run_number }}
-            **Commit:** ${{ github.sha }}
-          files: build/app/outputs/flutter-apk/app-debug.apk
+            ### ¿Cuál descargar?
+            - **La mayoría de teléfonos (2017 en adelante):** descarga `arm64`
+            - **Teléfonos viejos (antes de 2017):** descarga `arm32`
+            - Si no sabes cuál, descarga `arm64` primero
+
+            ### Instalar
+            1. Descarga el APK
+            2. Android → Ajustes → Seguridad → Instalar apps desconocidas ✓
+            3. Abre el APK descargado
+
+            **Build:** ${{ github.run_number }} | **Commit:** `${{ github.sha }}`
+          files: |
+            build/app/outputs/flutter-apk/ruta-epica-arm64-debug.apk
+            build/app/outputs/flutter-apk/ruta-epica-arm32-debug.apk
           draft: false
           prerelease: false

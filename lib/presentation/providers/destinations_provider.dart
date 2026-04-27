@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/destination_model.dart';
 import '../../data/repositories/destination_repository.dart';
 
 final destinationRepositoryProvider = Provider<DestinationRepository>((ref) {
-  return DestinationRepository();
+  final repo = DestinationRepository();
+  ref.onDispose(repo.invalidateCache);
+  return repo;
 });
 
 final featuredDestinationsProvider =
@@ -58,28 +61,44 @@ class SearchState {
 
 class SearchNotifier extends StateNotifier<SearchState> {
   final DestinationRepository _repository;
+  Timer? _debounce;
 
   SearchNotifier(this._repository) : super(const SearchState());
 
-  Future<void> search(String query) async {
-    state = state.copyWith(query: query, isLoading: true, clearError: true);
+  void search(String query) {
+    _debounce?.cancel();
+    state = state.copyWith(query: query, clearError: true);
     if (query.trim().isEmpty) {
       state = state.copyWith(results: [], isLoading: false);
       return;
     }
+    state = state.copyWith(isLoading: true);
+    _debounce = Timer(const Duration(milliseconds: 600), () => _execute(query));
+  }
+
+  Future<void> _execute(String query) async {
     try {
       final results = await _repository.search(query);
-      state = state.copyWith(results: results, isLoading: false);
+      if (mounted) state = state.copyWith(results: results, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error al buscar destinos.',
-      );
+      if (mounted) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Error al buscar destinos.',
+        );
+      }
     }
   }
 
   void clear() {
+    _debounce?.cancel();
     state = const SearchState();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 }
 
