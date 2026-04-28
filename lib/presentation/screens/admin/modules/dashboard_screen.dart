@@ -40,33 +40,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
+      final weeksAgo = now.subtract(const Duration(days: 56)).toIso8601String();
 
-      final results = await Future.wait([
-        _db.from('destinations').select('id', count: CountOption.exact).eq('is_active', true),
-        _db.from('destinations').select('id', count: CountOption.exact).eq('is_promotion', true).eq('is_active', true),
-        _db.from('profiles').select('id', count: CountOption.exact),
-        _db.from('bookings').select('id', count: CountOption.exact).gte('created_at', monthStart.toIso8601String()),
-        _db.from('leads').select('id', count: CountOption.exact).eq('status', 'nuevo'),
-        _db.from('testimonials').select('id', count: CountOption.exact).eq('is_approved', false),
-        _db.from('coupons').select('id', count: CountOption.exact).eq('is_active', true),
+      // Parallel queries — all return List<Map<String,dynamic>> (no count param)
+      final results = await Future.wait<List<dynamic>>([
+        _db.from('destinations').select('id').eq('is_active', true),
+        _db.from('destinations').select('id').eq('is_promotion', true).eq('is_active', true),
+        _db.from('profiles').select('id'),
+        _db.from('bookings').select('id').gte('created_at', monthStart.toIso8601String()),
+        _db.from('leads').select('id').eq('status', 'nuevo'),
+        _db.from('testimonials').select('id').eq('is_approved', false),
+        _db.from('coupons').select('id').eq('is_active', true),
         _db.from('bookings').select('status'),
-        _db.from('bookings').select('created_at').gte('created_at',
-            now.subtract(const Duration(days: 56)).toIso8601String()),
+        _db.from('bookings').select('created_at').gte('created_at', weeksAgo),
         _db.from('bookings').select('id,destination_name,status,created_at,full_name').order('created_at', ascending: false).limit(5),
         _db.from('leads').select('id,full_name,destination_query,status,created_at').order('created_at', ascending: false).limit(5),
       ]);
 
-      // Extract counts
-      final pkgRes = results[0] as PostgrestResponse;
-      final promoRes = results[1] as PostgrestResponse;
-      final userRes = results[2] as PostgrestResponse;
-      final bookMonthRes = results[3] as PostgrestResponse;
-      final leadsRes = results[4] as PostgrestResponse;
-      final testRes = results[5] as PostgrestResponse;
-      final coupRes = results[6] as PostgrestResponse;
+      // Counts — length of returned rows
+      final activePkgs       = results[0].length;
+      final activePromos     = results[1].length;
+      final users            = results[2].length;
+      final monthBookings    = results[3].length;
+      final pendingLeads     = results[4].length;
+      final pendingTests     = results[5].length;
+      final activeCoupons    = results[6].length;
 
       // Booking status breakdown
-      final statusList = (results[7] as List).cast<Map<String, dynamic>>();
+      final statusList = results[7].cast<Map<String, dynamic>>();
       int pending = 0, confirmed = 0, cancelled = 0;
       for (final b in statusList) {
         final s = b['status'] as String? ?? '';
@@ -76,33 +77,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       // Trend: group last 8 weeks
-      final allDates = (results[8] as List)
+      final allDates = results[8]
           .map((e) => DateTime.parse((e as Map)['created_at'] as String))
           .toList();
       final spots = <FlSpot>[];
       for (int w = 7; w >= 0; w--) {
         final weekStart = now.subtract(Duration(days: (w + 1) * 7));
-        final weekEnd = now.subtract(Duration(days: w * 7));
-        final count = allDates
+        final weekEnd   = now.subtract(Duration(days: w * 7));
+        final cnt = allDates
             .where((d) => d.isAfter(weekStart) && d.isBefore(weekEnd))
             .length;
-        spots.add(FlSpot((7 - w).toDouble(), count.toDouble()));
+        spots.add(FlSpot((7 - w).toDouble(), cnt.toDouble()));
       }
 
-      final recentBk = (results[9] as List).cast<Map<String, dynamic>>();
-      final recentL = (results[10] as List).cast<Map<String, dynamic>>();
+      final recentBk = results[9].cast<Map<String, dynamic>>();
+      final recentL  = results[10].cast<Map<String, dynamic>>();
 
       setState(() {
-        _activePkgs = pkgRes.count ?? 0;
-        _activePromos = promoRes.count ?? 0;
-        _users = userRes.count ?? 0;
-        _monthBookings = bookMonthRes.count ?? 0;
-        _pendingLeads = leadsRes.count ?? 0;
-        _pendingTestimonials = testRes.count ?? 0;
-        _activeCoupons = coupRes.count ?? 0;
-        _pendingBookings = pending;
-        _confirmedBookings = confirmed;
-        _cancelledBookings = cancelled;
+        _activePkgs          = activePkgs;
+        _activePromos        = activePromos;
+        _users               = users;
+        _monthBookings       = monthBookings;
+        _pendingLeads        = pendingLeads;
+        _pendingTestimonials = pendingTests;
+        _activeCoupons       = activeCoupons;
+        _pendingBookings     = pending;
+        _confirmedBookings   = confirmed;
+        _cancelledBookings   = cancelled;
         _trendSpots
           ..clear()
           ..addAll(spots);
