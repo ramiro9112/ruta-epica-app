@@ -91,6 +91,7 @@ class _AdminScreenState extends State<AdminScreen> {
           setState(() => _index = i);
           Navigator.pop(context);
         },
+        onBack: () => Navigator.pop(context),
       ),
       body: IndexedStack(
         index: _index,
@@ -113,12 +114,14 @@ class _AdminDrawer extends StatelessWidget {
   final int current;
   final String email;
   final ValueChanged<int> onSelect;
+  final VoidCallback onBack;
 
   const _AdminDrawer({
     required this.modules,
     required this.current,
     required this.email,
     required this.onSelect,
+    required this.onBack,
   });
 
   @override
@@ -226,7 +229,10 @@ class _AdminDrawer extends StatelessWidget {
                   color: Colors.white54, size: 20),
               title: const Text('Volver a la app',
                   style: TextStyle(color: Colors.white54, fontSize: 13)),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context); // close drawer
+                onBack();               // pop admin screen
+              },
               dense: true,
             ),
           ],
