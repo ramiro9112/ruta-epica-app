@@ -25,6 +25,7 @@ dependencies:
   lottie: ^3.1.0
   image_picker: ^1.0.7
   smooth_page_indicator: ^1.1.0
+  fl_chart: ^0.68.0
 
 dev_dependencies:
   flutter_test:
