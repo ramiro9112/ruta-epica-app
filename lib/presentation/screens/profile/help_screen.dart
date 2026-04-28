@@ -56,10 +56,6 @@ class _HelpScreenState extends State<HelpScreen> {
       'a': 'La mayoría de nuestros paquetes incluyen tiquetes aéreos desde las principales ciudades de Colombia. El detalle está especificado en cada paquete bajo la sección "Incluye".'
     },
     {
-      'q': '¿Cómo actualizo mi foto de perfil?',
-      'a': 'Ve a Mi Perfil, toca tu foto actual y selecciona una imagen de tu galería. La foto se actualiza automáticamente.'
-    },
-    {
       'q': '¿Puedo viajar en grupo?',
       'a': 'Sí. Al reservar puedes indicar el número de adultos y niños. Para grupos grandes de más de 10 personas, contáctanos por WhatsApp para obtener tarifas especiales.'
     },

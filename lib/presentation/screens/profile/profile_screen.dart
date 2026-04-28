@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/services/supabase_service.dart';
@@ -13,6 +12,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/favorites_provider.dart';
 import 'help_screen.dart';
 import 'notifications_screen.dart';
+import 'terms_screen.dart';
+import '../admin/admin_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -119,17 +120,31 @@ class ProfileScreen extends ConsumerWidget {
               _MenuItem(
                 icon: Icons.description_outlined,
                 label: AppStrings.terminos,
-                onTap: () async {
-                  final url = Uri.parse(
-                      'https://rutaepica.com/terminos-y-condiciones/');
-                  try {
-                    await launchUrl(url,
-                        mode: LaunchMode.externalApplication);
-                  } catch (_) {}
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TermsScreen(),
+                  ),
+                ),
               ),
             ],
           ),
+          // Admin section — visible only for admin accounts
+          if (_isAdmin(user?.email)) ...[
+            const SizedBox(height: 12),
+            _MenuSection(
+              items: [
+                _MenuItem(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: 'Panel administrador',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminScreen()),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           _MenuSection(
             items: [
@@ -156,6 +171,12 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  bool _isAdmin(String? email) {
+    if (email == null) return false;
+    const admins = {'agenciarutaepica@gmail.com', 'ramiro9112@gmail.com'};
+    return admins.contains(email.toLowerCase());
   }
 
   Future<void> _onSignOut(BuildContext context, WidgetRef ref) async {

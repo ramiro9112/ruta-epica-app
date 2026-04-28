@@ -37,8 +37,6 @@ class SupabaseService {
     final response = await client.auth.signUp(
       email: email.trim().toLowerCase(),
       password: password,
-      // GitHub Pages confirmation page — redirects browser to app deep link
-      emailRedirectTo: 'https://ramiro9112.github.io/ruta-epica-app/',
       data: {
         if (fullName != null) 'full_name': fullName,
         if (phone != null) 'phone': phone,
@@ -98,8 +96,9 @@ class SupabaseService {
   }
 
   Future<String?> uploadAvatar(File file, String userId) async {
-    final ext = file.path.split('.').last;
-    final path = 'avatars/$userId.$ext';
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final ext = file.path.split('.').last.toLowerCase();
+    final path = 'avatars/${userId}_$ts.$ext';
     await client.storage.from('avatars').upload(
           path,
           file,

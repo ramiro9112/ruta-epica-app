@@ -30,11 +30,47 @@ class ExploreScreen extends ConsumerWidget {
       backgroundColor: AppColors.lightGray,
       body: CustomScrollView(
         slivers: [
-          // SliverAppBar
+          // SliverAppBar — logo always visible in toolbar, search bar pinned below
           SliverAppBar(
             pinned: true,
-            expandedHeight: 120,
             backgroundColor: AppColors.deepBlue,
+            elevation: 0,
+            titleSpacing: 16,
+            title: Row(
+              children: [
+                Image.asset(
+                  'assets/images/logo.webp',
+                  height: 30,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Text(
+                    'Ruta Épica',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${AppStrings.hola}, $firstName!',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none_rounded,
+                    color: AppColors.white, size: 24),
+                onPressed: () {},
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
@@ -44,56 +80,13 @@ class ExploreScreen extends ConsumerWidget {
                     colors: [AppColors.deepBlue, AppColors.deepBlueLight],
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(16, 48, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Image.asset(
-                              'assets/images/logo.webp',
-                              height: 32,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Text(
-                                'Ruta Épica',
-                                style: TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${AppStrings.hola}, $firstName!',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.notifications_none_rounded,
-                              color: AppColors.white, size: 26),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(52),
+              preferredSize: const Size.fromHeight(56),
               child: Container(
                 color: AppColors.deepBlue,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
                 child: GestureDetector(
                   onTap: () => context.go('/home/search'),
                   child: Container(
