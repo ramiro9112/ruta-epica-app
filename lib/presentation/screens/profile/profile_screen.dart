@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/services/supabase_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/favorites_provider.dart';
+import 'help_screen.dart';
+import 'notifications_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -91,7 +94,12 @@ class ProfileScreen extends ConsumerWidget {
               _MenuItem(
                 icon: Icons.notifications_outlined,
                 label: AppStrings.notificaciones,
-                onTap: () {},
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
+                ),
               ),
             ],
           ),
@@ -101,12 +109,24 @@ class ProfileScreen extends ConsumerWidget {
               _MenuItem(
                 icon: Icons.help_outline_rounded,
                 label: AppStrings.ayuda,
-                onTap: () {},
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const HelpScreen(),
+                  ),
+                ),
               ),
               _MenuItem(
                 icon: Icons.description_outlined,
                 label: AppStrings.terminos,
-                onTap: () {},
+                onTap: () async {
+                  final url = Uri.parse(
+                      'https://rutaepica.com/terminos-y-condiciones/');
+                  try {
+                    await launchUrl(url,
+                        mode: LaunchMode.externalApplication);
+                  } catch (_) {}
+                },
               ),
             ],
           ),
@@ -159,7 +179,7 @@ class ProfileScreen extends ConsumerWidget {
     );
     if (confirm == true) {
       await ref.read(authNotifierProvider.notifier).signOut();
-      if (context.mounted) context.go('/login');
+      // Router's refreshListenable detects auth change and redirects automatically.
     }
   }
 
@@ -168,20 +188,72 @@ class ProfileScreen extends ConsumerWidget {
     if (userId == null) return;
     final picker = ImagePicker();
     final picked = await picker.pickImage(
-        source: ImageSource.gallery, maxWidth: 400, imageQuality: 80);
+        source: ImageSource.gallery, maxWidth: 600, imageQuality: 85);
     if (picked == null) return;
+
+    // Show loading indicator
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white)),
+              SizedBox(width: 12),
+              Text('Subiendo foto...'),
+            ],
+          ),
+          duration: Duration(seconds: 10),
+        ),
+      );
+    }
+
     try {
       final file = File(picked.path);
-      final url =
-          await SupabaseService.instance.uploadAvatar(file, userId);
-      if (url != null) {
-        await SupabaseService.instance.updateProfile(
-          userId: userId,
-          avatarUrl: url,
+      // Append timestamp to bust cache on re-upload
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final ext = picked.path.split('.').last.toLowerCase();
+      final path = 'avatars/${userId}_$ts.$ext';
+
+      await SupabaseService.instance.client.storage
+          .from('avatars')
+          .upload(path, file,
+              fileOptions: const FileOptions(upsert: true));
+
+      final url = SupabaseService.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(path);
+
+      await SupabaseService.instance.updateProfile(
+        userId: userId,
+        avatarUrl: url,
+      );
+      ref.invalidate(userProfileProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto actualizada'),
+            backgroundColor: AppColors.turquoise,
+            duration: Duration(seconds: 2),
+          ),
         );
-        ref.invalidate(userProfileProvider);
       }
-    } catch (_) {}
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al subir foto: ${e.toString().split(']').last.trim()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _showEditProfile(BuildContext context, WidgetRef ref, User? user) {

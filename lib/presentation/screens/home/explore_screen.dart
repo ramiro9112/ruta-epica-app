@@ -55,17 +55,23 @@ class ExploreScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Image.asset(
+                              'assets/images/logo.webp',
+                              height: 32,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => const Text(
+                                'Ruta Épica',
+                                style: TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
                             Text(
                               '${AppStrings.hola}, $firstName!',
                               style: const TextStyle(
-                                color: AppColors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const Text(
-                              '¿A dónde viajas hoy?',
-                              style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 13,
                               ),
@@ -441,11 +447,12 @@ class ExploreScreen extends ConsumerWidget {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () async {
+                    final msg = Uri.encodeComponent(AppStrings.whatsAppMessage);
                     final url = Uri.parse(
-                        'https://wa.me/573052394904?text=${Uri.encodeComponent('Hola! Quiero información sobre un viaje')}');
-                    if (await canLaunchUrl(url)) {
+                        'https://wa.me/${AppStrings.whatsAppNumber}?text=$msg');
+                    try {
                       await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
+                    } catch (_) {}
                   },
                   icon: const Icon(Icons.chat_rounded, size: 16),
                   label: const Text('WhatsApp'),
@@ -462,7 +469,13 @@ class ExploreScreen extends ConsumerWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    try {
+                      await launchUrl(
+                        Uri.parse('tel:+${AppStrings.whatsAppNumber}'),
+                      );
+                    } catch (_) {}
+                  },
                   icon: const Icon(Icons.phone_rounded, size: 16),
                   label: const Text('Llamar'),
                   style: OutlinedButton.styleFrom(

@@ -17,8 +17,15 @@ class WhatsAppFab extends StatelessWidget {
     final phone = phoneNumber ?? AppStrings.whatsAppNumber;
     final msg = Uri.encodeComponent(message ?? AppStrings.whatsAppMessage);
     final url = Uri.parse('https://wa.me/$phone?text=$msg');
-    if (await canLaunchUrl(url)) {
+    try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      // Fallback to whatsapp:// scheme
+      try {
+        await launchUrl(
+          Uri.parse('whatsapp://send?phone=$phone&text=$msg'),
+        );
+      } catch (_) {}
     }
   }
 
