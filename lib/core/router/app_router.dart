@@ -59,11 +59,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/onboarding';
 
+      // Show onboarding only first time — then allow free navigation
       if (!isAuthenticated && !isAuthRoute) {
         final prefs = await SharedPreferences.getInstance();
         final onboardingDone = prefs.getBool('onboarding_done') ?? false;
         if (!onboardingDone) return '/onboarding';
-        return '/login';
+        // Guest users go directly to home — no login required
+        return null;
       }
 
       if (isAuthenticated && isAuthRoute) {

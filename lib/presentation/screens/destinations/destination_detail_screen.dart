@@ -9,6 +9,8 @@ import '../../../data/models/destination_model.dart';
 import '../../providers/destinations_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../profile/profile_screen.dart' show showAuthRequiredDialog;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DestinationDetailScreen extends ConsumerWidget {
   final String destinationId;
@@ -81,9 +83,19 @@ class _DetailView extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
-                onPressed: () => ref
-                    .read(favoritesNotifierProvider.notifier)
-                    .toggle(destination.id),
+                onPressed: () {
+                  final isGuest =
+                      Supabase.instance.client.auth.currentUser == null;
+                  if (isGuest) {
+                    showAuthRequiredDialog(context,
+                        reason:
+                            'Inicia sesión para guardar destinos favoritos.');
+                    return;
+                  }
+                  ref
+                      .read(favoritesNotifierProvider.notifier)
+                      .toggle(destination.id);
+                },
               ),
               IconButton(
                 icon: Container(
@@ -401,8 +413,16 @@ class _DetailView extends ConsumerWidget {
         ),
         child: SafeArea(
           child: ElevatedButton(
-            onPressed: () =>
-                context.push('/booking/${destination.id}'),
+            onPressed: () {
+              final isGuest =
+                  Supabase.instance.client.auth.currentUser == null;
+              if (isGuest) {
+                showAuthRequiredDialog(context,
+                    reason: 'Inicia sesión para hacer una reserva.');
+                return;
+              }
+              context.push('/booking/${destination.id}');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.gold,
               foregroundColor: AppColors.darkText,

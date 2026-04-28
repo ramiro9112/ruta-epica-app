@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/extensions.dart';
@@ -8,6 +9,7 @@ import '../../../data/models/destination_model.dart';
 import '../../providers/bookings_provider.dart';
 import '../../providers/destinations_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../profile/profile_screen.dart' show showAuthRequiredDialog;
 
 class BookingFormScreen extends ConsumerStatefulWidget {
   final String destinationId;
@@ -32,6 +34,20 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Safety net: if user navigated here as guest (deep link), redirect.
+    final isGuest = Supabase.instance.client.auth.currentUser == null;
+    if (isGuest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          showAuthRequiredDialog(context,
+              reason: 'Inicia sesión para hacer una reserva.');
+          context.pop();
+        }
+      });
+      return const Scaffold(
+          body: Center(child: CircularProgressIndicator()));
+    }
+
     final bookingState = ref.watch(bookingNotifierProvider);
     final destinationAsync =
         ref.watch(destinationDetailProvider(widget.destinationId));

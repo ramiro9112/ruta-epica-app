@@ -2,10 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../data/models/destination_model.dart';
 import '../providers/favorites_provider.dart';
+import '../screens/profile/profile_screen.dart' show showAuthRequiredDialog;
 import 'shimmer_loading.dart';
 
 class DestinationCard extends ConsumerWidget {
@@ -106,8 +108,19 @@ class DestinationCard extends ConsumerWidget {
                   top: 6,
                   right: 6,
                   child: GestureDetector(
-                    onTap: () =>
-                        ref.read(favoritesNotifierProvider.notifier).toggle(destination.id),
+                    onTap: () {
+                      final isGuest =
+                          Supabase.instance.client.auth.currentUser == null;
+                      if (isGuest) {
+                        showAuthRequiredDialog(context,
+                            reason:
+                                'Inicia sesión para guardar destinos favoritos.');
+                        return;
+                      }
+                      ref
+                          .read(favoritesNotifierProvider.notifier)
+                          .toggle(destination.id);
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -262,9 +275,19 @@ class DestinationGridCard extends ConsumerWidget {
                       top: 6,
                       right: 6,
                       child: GestureDetector(
-                        onTap: () => ref
-                            .read(favoritesNotifierProvider.notifier)
-                            .toggle(destination.id),
+                        onTap: () {
+                          final isGuest =
+                              Supabase.instance.client.auth.currentUser == null;
+                          if (isGuest) {
+                            showAuthRequiredDialog(context,
+                                reason:
+                                    'Inicia sesión para guardar destinos favoritos.');
+                            return;
+                          }
+                          ref
+                              .read(favoritesNotifierProvider.notifier)
+                              .toggle(destination.id);
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(

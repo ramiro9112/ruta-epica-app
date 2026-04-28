@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../providers/destinations_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/destination_card.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../profile/profile_screen.dart' show showAuthRequiredDialog;
 
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isGuest = Supabase.instance.client.auth.currentUser == null;
+
+    if (isGuest) {
+      return _GuestFavoritesWall(onExplore: () => context.go('/home/explore'));
+    }
+
     final favoriteIds = ref.watch(favoritesNotifierProvider);
     final allDestinations = ref.watch(allDestinationsProvider(null));
 
@@ -54,6 +62,79 @@ class FavoritesScreen extends ConsumerWidget {
                 DestinationGridCard(destination: favDestinations[i]),
           );
         },
+      ),
+    );
+  }
+}
+
+class _GuestFavoritesWall extends StatelessWidget {
+  final VoidCallback onExplore;
+
+  const _GuestFavoritesWall({required this.onExplore});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.lightGray,
+      appBar: AppBar(
+        title: const Text(AppStrings.misFavoritos),
+        automaticallyImplyLeading: false,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: AppColors.deepBlue.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.favorite_border_rounded,
+                    size: 64, color: AppColors.deepBlue),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Guarda tus destinos favoritos',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkText),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Inicia sesión o crea una cuenta para guardar tus destinos favoritos.',
+                style: TextStyle(
+                    color: AppColors.darkGray, fontSize: 14, height: 1.6),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 28),
+              ElevatedButton(
+                onPressed: () => showAuthRequiredDialog(context,
+                    reason:
+                        'Inicia sesión para guardar tus destinos favoritos.'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.deepBlue,
+                  foregroundColor: AppColors.white,
+                  minimumSize: const Size(200, 48),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Iniciar sesión',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onExplore,
+                child: const Text(AppStrings.explorarDestinos,
+                    style: TextStyle(color: AppColors.deepBlue)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

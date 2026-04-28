@@ -39,7 +39,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!mounted) return;
     if (onboardingDone) {
-      context.go('/login');
+      context.go('/home/explore');
     } else {
       context.go('/onboarding');
     }

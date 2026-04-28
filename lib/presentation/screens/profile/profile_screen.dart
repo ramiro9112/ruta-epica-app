@@ -21,6 +21,10 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = Supabase.instance.client.auth.currentUser;
+    final isGuest = user == null;
+
+    if (isGuest) return _GuestProfileView();
+
     final profileAsync = ref.watch(userProfileProvider);
     final favCount = ref.watch(favoritesNotifierProvider).length;
 
@@ -38,31 +42,29 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: ListView(
         children: [
-          // Profile header
           profileAsync.when(
             loading: () => _ProfileHeader(
-              name: user?.email?.split('@').first ?? 'Viajero',
-              email: user?.email ?? '',
+              name: user.email?.split('@').first ?? 'Viajero',
+              email: user.email ?? '',
               avatarUrl: null,
               favCount: favCount,
             ),
             error: (_, __) => _ProfileHeader(
-              name: user?.email?.split('@').first ?? 'Viajero',
-              email: user?.email ?? '',
+              name: user.email?.split('@').first ?? 'Viajero',
+              email: user.email ?? '',
               avatarUrl: null,
               favCount: favCount,
             ),
             data: (profile) => _ProfileHeader(
-              name: profile?.displayName ?? user?.email?.split('@').first ?? 'Viajero',
-              email: profile?.email ?? user?.email ?? '',
+              name: profile?.displayName ?? user.email?.split('@').first ?? 'Viajero',
+              email: profile?.email ?? user.email ?? '',
               avatarUrl: profile?.avatarUrl,
               phone: profile?.phone,
               favCount: favCount,
-              onAvatarTap: () => _pickAvatar(context, ref, user?.id),
+              onAvatarTap: () => _pickAvatar(context, ref, user.id),
             ),
           ),
           const SizedBox(height: 16),
-          // Menu items
           _MenuSection(
             items: [
               _MenuItem(
@@ -112,9 +114,7 @@ class ProfileScreen extends ConsumerWidget {
                 label: AppStrings.ayuda,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const HelpScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const HelpScreen()),
                 ),
               ),
               _MenuItem(
@@ -122,15 +122,12 @@ class ProfileScreen extends ConsumerWidget {
                 label: AppStrings.terminos,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const TermsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const TermsScreen()),
                 ),
               ),
             ],
           ),
-          // Admin section — visible only for admin accounts
-          if (_isAdmin(user?.email)) ...[
+          if (_isAdmin(user.email)) ...[
             const SizedBox(height: 12),
             _MenuSection(
               items: [
@@ -157,14 +154,10 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-          // Version
           Center(
             child: Text(
               '${AppStrings.version} 1.0.0',
-              style: const TextStyle(
-                color: AppColors.darkGray,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: AppColors.darkGray, fontSize: 12),
             ),
           ),
           const SizedBox(height: 24),
@@ -352,6 +345,186 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
+
+// ─── Guest view ──────────────────────────────────────────────────────────────
+
+class _GuestProfileView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.lightGray,
+      appBar: AppBar(
+        title: const Text(AppStrings.miPerfil),
+        automaticallyImplyLeading: false,
+      ),
+      body: ListView(
+        children: [
+          // Guest header
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.deepBlue, AppColors.deepBlueLight],
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 32, 20, 36),
+            child: Column(
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3), width: 2),
+                  ),
+                  child: const Icon(Icons.person_outline_rounded,
+                      size: 48, color: Colors.white70),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Inicia sesión o crea una cuenta',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Guarda favoritos, haz reservas y más',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: AppColors.darkText,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => context.push('/login'),
+                        child: const Text(
+                          'Iniciar sesión',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.white,
+                          side: const BorderSide(
+                              color: Colors.white70, width: 1.5),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => context.push('/register'),
+                        child: const Text(
+                          'Registrarse',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _MenuSection(
+            items: [
+              _MenuItem(
+                icon: Icons.help_outline_rounded,
+                label: AppStrings.ayuda,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HelpScreen()),
+                ),
+              ),
+              _MenuItem(
+                icon: Icons.description_outlined,
+                label: AppStrings.terminos,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TermsScreen()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Text(
+              '${AppStrings.version} 1.0.0',
+              style:
+                  const TextStyle(color: AppColors.darkGray, fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Auth-required dialog (called from favorites / booking) ──────────────────
+
+void showAuthRequiredDialog(BuildContext context, {String? reason}) {
+  showDialog<void>(
+    context: context,
+    builder: (_) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text(
+        'Inicia sesión',
+        style: TextStyle(fontWeight: FontWeight.w700),
+      ),
+      content: Text(
+        reason ?? 'Necesitas una cuenta para continuar.',
+        style: const TextStyle(fontSize: 14),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.deepBlue,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+            context.push('/login');
+          },
+          child: const Text('Iniciar sesión',
+              style: TextStyle(color: Colors.white)),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            context.push('/register');
+          },
+          child: const Text('Registrarse'),
+        ),
+      ],
+    ),
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _ProfileHeader extends StatelessWidget {
   final String name;
