@@ -187,6 +187,24 @@ class ExploreScreen extends ConsumerWidget {
   }
 
   Widget _buildCarousel(AsyncValue<List<DestinationModel>> promotionsAsync) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final bannersAsync = ref.watch(activeBannersProvider);
+        return bannersAsync.when(
+          loading: () => _carouselFromPromotions(promotionsAsync),
+          error: (_, __) => _carouselFromPromotions(promotionsAsync),
+          data: (banners) {
+            if (banners.isNotEmpty) {
+              return PromoCarousel(promotions: banners);
+            }
+            return _carouselFromPromotions(promotionsAsync);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _carouselFromPromotions(AsyncValue<List<DestinationModel>> promotionsAsync) {
     return promotionsAsync.when(
       loading: () => Container(
         height: 190,

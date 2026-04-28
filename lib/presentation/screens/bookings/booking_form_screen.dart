@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/extensions.dart';
+import '../../../data/models/destination_model.dart';
 import '../../providers/bookings_provider.dart';
 import '../../providers/destinations_provider.dart';
 import '../../widgets/custom_button.dart';
@@ -415,7 +416,7 @@ class _Step2 extends ConsumerWidget {
 }
 
 class _Step3 extends ConsumerWidget {
-  final dynamic destination;
+  final DestinationModel destination;
 
   const _Step3({super.key, required this.destination});
 

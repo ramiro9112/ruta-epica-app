@@ -41,9 +41,9 @@ class DestinationModel {
 
   factory DestinationModel.fromJson(Map<String, dynamic> json) {
     return DestinationModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      country: json['country'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      country: json['country'] as String? ?? '',
       description: json['description'] as String? ?? '',
       imageUrl: json['image_url'] as String? ?? '',
       gallery: (json['gallery'] as List<dynamic>?)

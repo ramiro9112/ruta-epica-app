@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/destination_model.dart';
+import '../../data/models/promotion_model.dart';
 import '../../data/repositories/destination_repository.dart';
 
 final destinationRepositoryProvider = Provider<DestinationRepository>((ref) {
@@ -27,6 +29,31 @@ final promotionsProvider =
 final destinationDetailProvider =
     FutureProvider.family<DestinationModel, String>((ref, id) async {
   return ref.watch(destinationRepositoryProvider).getById(id);
+});
+
+final activeBannersProvider = FutureProvider<List<PromotionModel>>((ref) async {
+  try {
+    final now = DateTime.now().toIso8601String();
+    final data = await Supabase.instance.client
+        .from('banners')
+        .select()
+        .eq('is_active', true)
+        .or('ends_at.is.null,ends_at.gte.$now')
+        .order('display_order')
+        .limit(10);
+    return (data as List).map((b) => PromotionModel(
+      id: b['id'] as String,
+      title: b['title'] as String? ?? '',
+      subtitle: b['subtitle'] as String? ?? '',
+      imageUrl: b['image_url'] as String? ?? '',
+      destinationId: b['destination_id'] as String?,
+      discountPercent: null,
+      validUntil: b['ends_at'] != null ? DateTime.tryParse(b['ends_at']) ?? DateTime.now().add(const Duration(days: 30)) : DateTime.now().add(const Duration(days: 30)),
+      isActive: true,
+    )).toList();
+  } catch (_) {
+    return [];
+  }
 });
 
 // Search state

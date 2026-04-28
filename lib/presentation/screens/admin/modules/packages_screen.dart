@@ -187,8 +187,9 @@ class _PackageCard extends StatelessWidget {
     final isActive = pkg['is_active'] as bool? ?? true;
     final isPromo = pkg['is_promotion'] as bool? ?? false;
     final tag = pkg['tag'] as String?;
-    final price = (pkg['price'] as num?)?.toDouble() ?? 0;
-    final promoPrice = (pkg['promotion_price'] as num?)?.toDouble();
+    final price = (pkg['price_from'] as num?)?.toDouble() ?? 0;
+    final discountPct = (pkg['discount_percent'] as num?)?.toDouble();
+    final promoPrice = discountPct != null ? price * (1 - discountPct / 100) : null;
     final spots = pkg['available_spots'] as int?;
 
     return Container(
@@ -355,8 +356,8 @@ class _PackageFormScreenState extends State<_PackageFormScreen> {
     _name          = TextEditingController(text: p?['name'] ?? '');
     _destination   = TextEditingController(text: p?['destination'] ?? '');
     _country       = TextEditingController(text: p?['country'] ?? '');
-    _price         = TextEditingController(text: p?['price']?.toString() ?? '');
-    _promoPrice    = TextEditingController(text: p?['promotion_price']?.toString() ?? '');
+    _price         = TextEditingController(text: p?['price_from']?.toString() ?? '');
+    _promoPrice    = TextEditingController(text: p?['discount_percent']?.toString() ?? '');
     _duration      = TextEditingController(text: p?['duration_days']?.toString() ?? '');
     _description   = TextEditingController(text: p?['description'] ?? '');
     _itinerary     = TextEditingController(text: p?['itinerary'] ?? '');
@@ -391,10 +392,9 @@ class _PackageFormScreenState extends State<_PackageFormScreen> {
 
     final data = {
       'name': _name.text.trim(),
-      'destination': _destination.text.trim(),
       'country': _country.text.trim(),
-      'price': double.tryParse(_price.text) ?? 0,
-      'promotion_price': _promoPrice.text.isNotEmpty ? double.tryParse(_promoPrice.text) : null,
+      'price_from': double.tryParse(_price.text) ?? 0,
+      'discount_percent': _promoPrice.text.isNotEmpty ? double.tryParse(_promoPrice.text) : null,
       'duration_days': int.tryParse(_duration.text),
       'description': _description.text.trim(),
       'itinerary': _itinerary.text.trim().isNotEmpty ? _itinerary.text.trim() : null,
