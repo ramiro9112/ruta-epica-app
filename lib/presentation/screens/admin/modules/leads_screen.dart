@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import 'conversations_screen.dart';
 
 class LeadsScreen extends StatefulWidget {
   const LeadsScreen({super.key});
@@ -18,7 +19,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
   String _statusFilter = 'all';
   final _search = TextEditingController();
 
-  static const _statuses = ['all', 'nuevo', 'contactado', 'vendido', 'perdido'];
+  static const _statuses = ['all', 'frio', 'caliente', 'cliente', 'cerrado'];
 
   @override
   void initState() {
@@ -150,6 +151,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                               lead: _leads[i],
                               onStatusChange: (newStatus) => _changeStatus(_leads[i]['id'], newStatus),
                               onTap: () => _openDetail(context, _leads[i]),
+                              onViewChat: () => _openChat(context, _leads[i]),
                             ),
                           ),
                   ),
@@ -177,23 +179,39 @@ class _LeadsScreenState extends State<LeadsScreen> {
     ));
   }
 
+  void _openChat(BuildContext context, Map<String, dynamic> lead) {
+    final phone = lead['phone'] as String?;
+    if (phone == null || phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Este lead no tiene número de teléfono')),
+      );
+      return;
+    }
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ConversationsScreen(
+        phone: phone,
+        leadName: lead['full_name'] as String?,
+      ),
+    ));
+  }
+
   String _statusLabel(String s) {
     switch (s) {
       case 'all': return 'Todos';
-      case 'nuevo': return 'Nuevo';
-      case 'contactado': return 'Contactado';
-      case 'vendido': return 'Vendido';
-      case 'perdido': return 'Perdido';
+      case 'frio': return 'Frío';
+      case 'caliente': return 'Caliente';
+      case 'cliente': return 'Cliente';
+      case 'cerrado': return 'Cerrado';
       default: return s;
     }
   }
 
   Color _statusColor(String s) {
     switch (s) {
-      case 'nuevo': return const Color(0xFFE65100);
-      case 'contactado': return AppColors.deepBlue;
-      case 'vendido': return Colors.green;
-      case 'perdido': return Colors.grey;
+      case 'frio': return AppColors.info;
+      case 'caliente': return const Color(0xFFE65100);
+      case 'cliente': return Colors.green;
+      case 'cerrado': return Colors.grey;
       default: return AppColors.deepBlue;
     }
   }
@@ -203,8 +221,9 @@ class _LeadCard extends StatelessWidget {
   final Map<String, dynamic> lead;
   final ValueChanged<String> onStatusChange;
   final VoidCallback onTap;
+  final VoidCallback onViewChat;
 
-  const _LeadCard({required this.lead, required this.onStatusChange, required this.onTap});
+  const _LeadCard({required this.lead, required this.onStatusChange, required this.onTap, required this.onViewChat});
 
   @override
   Widget build(BuildContext context) {
@@ -239,13 +258,26 @@ class _LeadCard extends StatelessWidget {
             Row(children: [
               if (createdAt != null) Text(df.format(createdAt), style: TextStyle(color: Colors.grey[500], fontSize: 11)),
               const Spacer(),
+              GestureDetector(
+                onTap: onViewChat,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.chat_bubble_outline_rounded, size: 13, color: AppColors.turquoiseDark),
+                    SizedBox(width: 4),
+                    Text('Chat', style: TextStyle(fontSize: 12, color: AppColors.turquoiseDark, fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+              ),
               PopupMenuButton<String>(
                 onSelected: onStatusChange,
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'nuevo', child: Text('Nuevo')),
-                  const PopupMenuItem(value: 'contactado', child: Text('Contactado')),
-                  const PopupMenuItem(value: 'vendido', child: Text('Vendido')),
-                  const PopupMenuItem(value: 'perdido', child: Text('Perdido')),
+                  const PopupMenuItem(value: 'frio', child: Text('Frío')),
+                  const PopupMenuItem(value: 'caliente', child: Text('Caliente')),
+                  const PopupMenuItem(value: 'cliente', child: Text('Cliente')),
+                  const PopupMenuItem(value: 'cerrado', child: Text('Cerrado')),
                 ],
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -278,10 +310,10 @@ class _LeadCard extends StatelessWidget {
 
   Color _statusColor(String s) {
     switch (s) {
-      case 'nuevo': return const Color(0xFFE65100);
-      case 'contactado': return AppColors.deepBlue;
-      case 'vendido': return Colors.green;
-      case 'perdido': return Colors.grey;
+      case 'frio': return AppColors.info;
+      case 'caliente': return const Color(0xFFE65100);
+      case 'cliente': return Colors.green;
+      case 'cerrado': return Colors.grey;
       default: return Colors.grey;
     }
   }
@@ -295,13 +327,13 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
-      case 'nuevo': color = const Color(0xFFE65100); break;
-      case 'contactado': color = AppColors.deepBlue; break;
-      case 'vendido': color = Colors.green; break;
-      case 'perdido': color = Colors.grey; break;
+      case 'frio': color = AppColors.info; break;
+      case 'caliente': color = const Color(0xFFE65100); break;
+      case 'cliente': color = Colors.green; break;
+      case 'cerrado': color = Colors.grey; break;
       default: color = Colors.grey;
     }
-    final labels = {'nuevo': 'Nuevo', 'contactado': 'Contactado', 'vendido': 'Vendido', 'perdido': 'Perdido'};
+    final labels = {'frio': 'Frío', 'caliente': 'Caliente', 'cliente': 'Cliente', 'cerrado': 'Cerrado'};
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
@@ -346,7 +378,7 @@ class _LeadDetailScreenState extends State<_LeadDetailScreen> {
     _message     = TextEditingController(text: l?['message'] ?? '');
     _notes       = TextEditingController(text: l?['notes'] ?? '');
     _assignedTo  = TextEditingController(text: l?['assigned_to'] ?? '');
-    _status      = l?['status'] as String? ?? 'nuevo';
+    _status      = l?['status'] as String? ?? 'frio';
   }
 
   @override
@@ -411,9 +443,9 @@ class _LeadDetailScreenState extends State<_LeadDetailScreen> {
             _card([
               const Text('Estado del lead', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepBlue)),
               const SizedBox(height: 12),
-              Wrap(spacing: 8, children: ['nuevo', 'contactado', 'vendido', 'perdido'].map((s) {
+              Wrap(spacing: 8, children: ['frio', 'caliente', 'cliente', 'cerrado'].map((s) {
                 final active = _status == s;
-                final labels = {'nuevo': 'Nuevo', 'contactado': 'Contactado', 'vendido': 'Vendido', 'perdido': 'Perdido'};
+                final labels = {'frio': 'Frío', 'caliente': 'Caliente', 'cliente': 'Cliente', 'cerrado': 'Cerrado'};
                 return GestureDetector(
                   onTap: () => setState(() => _status = s),
                   child: AnimatedContainer(
@@ -442,10 +474,10 @@ class _LeadDetailScreenState extends State<_LeadDetailScreen> {
 
   Color _sColor(String s) {
     switch (s) {
-      case 'nuevo': return const Color(0xFFE65100);
-      case 'contactado': return AppColors.deepBlue;
-      case 'vendido': return Colors.green;
-      case 'perdido': return Colors.grey;
+      case 'frio': return AppColors.info;
+      case 'caliente': return const Color(0xFFE65100);
+      case 'cliente': return Colors.green;
+      case 'cerrado': return Colors.grey;
       default: return Colors.grey;
     }
   }
