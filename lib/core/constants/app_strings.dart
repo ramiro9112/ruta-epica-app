@@ -146,7 +146,7 @@ class AppStrings {
 
   // Contact
   static const String contactarWhatsApp = 'Contactar por WhatsApp';
-  static const String whatsAppNumber = '573052394904';
+  static const String whatsAppNumber = '573052648618';
   static const String whatsAppMessage =
       'Hola! Quiero información sobre un viaje';
 }
