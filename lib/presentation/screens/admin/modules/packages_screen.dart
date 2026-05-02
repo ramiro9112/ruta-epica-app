@@ -417,6 +417,16 @@ class _PackageFormScreenState extends State<_PackageFormScreen> {
       } else {
         await _db.from('destinations').update(data).eq('id', widget.pkg!['id']);
       }
+      // Evict old and new image URLs from Flutter's network image cache
+      // so the list always shows the freshly-saved image, not a stale copy.
+      final oldUrl = widget.pkg?['image_url'] as String?;
+      final newUrl = _imageUrl.text.trim();
+      if (oldUrl != null && oldUrl.isNotEmpty) {
+        await NetworkImage(oldUrl).evict();
+      }
+      if (newUrl.isNotEmpty && newUrl != oldUrl) {
+        await NetworkImage(newUrl).evict();
+      }
       widget.onSaved();
       if (mounted) Navigator.pop(context);
     } catch (e) {

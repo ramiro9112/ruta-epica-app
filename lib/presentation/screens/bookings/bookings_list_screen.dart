@@ -248,11 +248,21 @@ class BookingCard extends ConsumerWidget {
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.error),
-                              onPressed: () {
-                                ref
-                                    .read(bookingNotifierProvider.notifier)
-                                    .cancelBooking(booking.id);
+                              onPressed: () async {
+                                final notifier = ref.read(
+                                    bookingNotifierProvider.notifier);
                                 Navigator.pop(context);
+                                final ok =
+                                    await notifier.cancelBooking(booking.id);
+                                if (!ok && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'No se pudo cancelar la reserva. Intenta de nuevo.'),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
                               },
                               child: const Text(AppStrings.cancelarReserva),
                             ),

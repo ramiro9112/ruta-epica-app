@@ -149,11 +149,14 @@ class BookingNotifier extends StateNotifier<BookingFormState> {
     }
   }
 
-  Future<void> cancelBooking(String bookingId) async {
+  Future<bool> cancelBooking(String bookingId) async {
     try {
       await _repository.cancel(bookingId);
       _ref.invalidate(userBookingsProvider);
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   void reset() {
